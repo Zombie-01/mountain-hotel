@@ -1,36 +1,39 @@
 import type { NextConfig } from "next";
-import path from "node:path";
 
-// Loader path from orchids-visual-edits - use direct resolve to get the actual file
-const loaderPath = require.resolve('orchids-visual-edits/loader.js');
+// Resolve loader safely
+const loaderPath = require.resolve("orchids-visual-edits/loader.js");
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+
+  // Image config (allows all external images)
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
-  outputFileTracingRoot: path.resolve(__dirname, '../../'),
+
+  // Prevent build from failing on TS / ESLint (your choice)
   typescript: {
     ignoreBuildErrors: true,
   },
+
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  // Turbopack loader
   turbopack: {
     rules: {
-      "*.{jsx,tsx}": {
-        loaders: [loaderPath]
-      }
-    }
-  }
-} as NextConfig;
+      "*.{js,jsx,ts,tsx}": {
+        loaders: [loaderPath],
+      },
+    },
+  },
+
+  // Ensure SSR works (do NOT use output: "export")
+  output: "standalone",
+};
 
 export default nextConfig;
