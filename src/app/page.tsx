@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
 
 const menuCategories = [
@@ -212,8 +212,92 @@ function AnimatedSection({ children, className = "" }: { children: React.ReactNo
   );
 }
 
+function WelcomeModal({ onEnter }: { onEnter: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+    >
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 text-center px-8 py-16 max-w-lg mx-4"
+      >
+        <div className="absolute inset-0 border border-[#d4a855]/20 bg-gradient-to-b from-[#1a1510]/50 to-[#0a0805]/80 backdrop-blur-sm" />
+        <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#d4a855]/60" />
+        <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-[#d4a855]/60" />
+        <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-[#d4a855]/60" />
+        <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-[#d4a855]/60" />
+        
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <MountainLogo className="h-24 mx-auto mb-8 text-[#d4a855] drop-shadow-[0_0_30px_rgba(212,168,85,0.4)]" />
+          </motion.div>
+          
+          <motion.h2
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="text-3xl md:text-4xl font-light text-white mb-4 tracking-[0.2em]"
+          >
+            Тавтай морил
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="text-[#d4a855]/70 tracking-[0.3em] uppercase text-xs mb-12"
+          >
+            Welcome to Mountain Hotel
+          </motion.p>
+
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            onClick={onEnter}
+            whileHover={{ 
+              scale: 1.05, 
+              boxShadow: "0 0 40px rgba(212,168,85,0.5)",
+            }}
+            whileTap={{ scale: 0.98 }}
+            className="px-12 py-4 bg-gradient-to-r from-[#d4a855] via-[#e6c580] to-[#d4a855] 
+                       text-[#0a0a0a] font-medium tracking-[0.3em] uppercase text-sm
+                       shadow-[0_0_30px_rgba(212,168,85,0.3)] transition-all duration-500
+                       hover:shadow-[0_0_50px_rgba(212,168,85,0.5)]"
+          >
+            Меню харах
+          </motion.button>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.6 }}
+            className="text-white/30 text-xs mt-8 tracking-wider"
+          >
+            Press Enter or click to continue
+          </motion.p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState("tea");
+  const [showWelcome, setShowWelcome] = useState(true);
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -224,11 +308,34 @@ export default function Home() {
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
   const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
+  const handleEnter = useCallback(() => {
+    setShowWelcome(false);
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && showWelcome) {
+        handleEnter();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showWelcome, handleEnter]);
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] overflow-x-hidden">
+      <AnimatePresence>
+        {showWelcome && <WelcomeModal onEnter={handleEnter} />}
+      </AnimatePresence>
+
       <motion.header 
         initial={{ y: -100 }}
-        animate={{ y: 0 }}
+        animate={{ y: showWelcome ? -100 : 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-[#d4a855]/10"
       >
@@ -274,16 +381,16 @@ export default function Home() {
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            animate={{ opacity: showWelcome ? 0 : 1, scale: showWelcome ? 0.5 : 1, rotate: 0 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
           >
             <MountainLogo className="h-28 md:h-36 mx-auto mb-8 text-[#d4a855] drop-shadow-[0_0_30px_rgba(212,168,85,0.3)]" />
           </motion.div>
           
           <motion.div
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
+            animate={{ opacity: showWelcome ? 0 : 1, y: showWelcome ? 40 : 0 }}
+            transition={{ duration: 1, delay: 0.4 }}
           >
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-white mb-4 tracking-[0.2em]">
               <span className="bg-gradient-to-r from-[#e6c580] via-[#d4a855] to-[#b8924a] bg-clip-text text-transparent">
@@ -297,7 +404,7 @@ export default function Home() {
 
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: showWelcome ? 0 : 1 }}
             transition={{ duration: 1, delay: 0.6 }}
             className="text-base md:text-lg text-[#d4a855]/80 mb-16 tracking-[0.5em] uppercase font-light"
           >
@@ -307,10 +414,10 @@ export default function Home() {
           <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="visible"
+            animate={showWelcome ? "hidden" : "visible"}
             className="flex flex-wrap items-center justify-center gap-6 md:gap-12"
           >
-            {["Ресторан", "Зочид Буудал", "Лоунж"].map((item, i) => (
+            {["Ресторан", "Зочид Буудал", "Лоунж"].map((item) => (
               <motion.span
                 key={item}
                 variants={fadeInUp}
@@ -331,7 +438,7 @@ export default function Home() {
 
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: showWelcome ? 0 : 1 }}
           transition={{ delay: 1.5, duration: 1 }}
           className="absolute bottom-12 left-1/2 -translate-x-1/2"
         >
@@ -386,7 +493,7 @@ export default function Home() {
             variants={staggerContainer}
             className="flex flex-wrap justify-center gap-4 mb-16"
           >
-            {menuCategories.map((cat, i) => (
+            {menuCategories.map((cat) => (
               <motion.button
                 key={cat.id}
                 variants={fadeInUp}
@@ -629,7 +736,7 @@ export default function Home() {
                 title: "Цагийн хуваарь",
                 text: "24/7 Нээлттэй"
               }
-            ].map((item, i) => (
+            ].map((item) => (
               <motion.div
                 key={item.title}
                 variants={fadeInUp}

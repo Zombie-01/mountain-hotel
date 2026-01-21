@@ -1,0 +1,8 @@
+{
+  "name": "Mountain Hotel Hazel",
+  "short_name": "Hazel Hotel",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
